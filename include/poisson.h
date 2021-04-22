@@ -96,8 +96,11 @@ protected:
   Vector<double>             system_rhs;
 
   FunctionParser<dim> forcing_term;
+  FunctionParser<dim> coefficient;
+  FunctionParser<dim> exact_solution;
   FunctionParser<dim> dirichlet_boundary_condition;
   FunctionParser<dim> neumann_boundary_condition;
+  FunctionParser<dim> pre_refinement;
 
 
   unsigned int fe_degree           = 1;
@@ -109,8 +112,11 @@ protected:
   std::set<types::boundary_id> neumann_ids;
 
   std::string                   forcing_term_expression                  = "1";
+  std::string                   coefficient_expression                   = "1";
+  std::string                   exact_solution_expression                = "0";
   std::string                   dirichlet_boundary_conditions_expression = "0";
   std::string                   neumann_boundary_conditions_expression   = "0";
+  std::string                   pre_refinement_expression                = "0";
   std::map<std::string, double> constants;
 
   std::string grid_generator_function  = "hyper_cube";

@@ -1,4 +1,4 @@
-#  Lab 05 - Boundary conditions and constraints
+#  Lab 06 - A posteriori error estimation and adaptive FEM
 ## Theory and Practice of Finite Elements
 
 **Luca Heltai** <luca.heltai@sissa.it>
@@ -29,57 +29,52 @@ allow also non-homogeneous Neumann boundary conditions on different parts of
 the domain, and you will have added some more options to the solver, enabling
 usage of a direct solver, or of some more sofisticated preconditioners.
 
-## Lab-05
+## Lab-06
+### step-6
 
-### step-5
+1.  See documentation of step-6 at
+    <https://www.dealii.org/current/doxygen/deal.II/step_6.html>
 
-1. Add the parameters
+2. Add the parameters
    
-    - `Neumann boundary condition expression`
-    - `Dirichlet boundary ids`
-    - `Neumann boundary ids`
+    - `Mapping degree`
+    - `Marking strategy`
+    - `Estimator type`
+    - `Coarsening and refinement factors`
    
-   and the corresponding member variables to your Poisson problem problem, using 
-   `std::set<dealii::types::boundary_id>` for the last two parameters
+where `Mapping degree` controls the degree of the mapping used in the code,
+`Marking strategy` is a choice between `global|fixed_fraction|fixed_number`,
+`Estimator type` is a choice between `exact|kelly|residual`, and
+`Coarsening and refinement factors` is a `std::pair<double, double>` containing
+the arguments to pass to the `GridRefinement::refine_and_coarsen_fixed_*`
+functions
 
-2. Modify your implementation of Dirichlet boundary conditions, in order to
-apply the Dirichlet function to all boundary ids indicated in the parameter
-file
+1. Make sure all `FEValues` classes use a mapping with the correct order, and
+make sure you use the correct mapping in the output as well (if you have a
+recent Paraview)
 
-3. Implement Neumann boundary conditions, using the function defined above, on
-the ids of the Neumann boundary indicated in the parameter file
+4. Add a `Vector<float` field `error_per_cell` to `Poisson`, to be filled by
+the method `estimate`
 
-4. Create a function that parses parameters from a string, to be used in the
-testing infrastructure
+5. Add a method `residual_error_estimator` that computes the residual error estimator, using `FEInterfaceValues` and `FEValues`
 
-5. Create a few tests that actually solve a Poisson problem on very small grids
-with very simple but non-trivial combinations of boundary conditions, on
-different domains, and verify the correctness of your findings. Examples
-include using globally linear (quadratic) exact functions, with linear
-(quadratic) finite elements, and verify that the error you make is actually
-zero (in this case, global interpolation gives the exact solution, therefore
-the finite element should also provide the exact solution)
+6. Add a method `estimate` to the `Poisson` class, to compute the H1 seminorm
+of the difference between the exact and computed solution if `Estimator type`
+is `exact`, calls `KellyErrorEstimator<dim>::estimate` if `Estimator type` is
+`kelly`, and calls `residual_error_estimator` if `Estimator type` is `residual`
 
-6. Modify your code to use `AffineConstraints` instead of
-`VectorTools::apply_boundary_values` (see the documentation of `step-6`). Run
-again all tests, and verify that you pass your own checks again with the new
-code
+7. Add to the convergence tables also the estimator you computed. This should be
+identical to the `H1` semi-norm in the case where `Estimator type` is `exact`
 
-7. Add the parameters:
-    - `Local pre-refinement grid size expression`
-   
-   and the corresponding members. When creating the grid, instead of simply
-   refining globally a fixed number of times (given by the parameter 
-   `Number of global refinements`), refine locally your grid when the function
-   above evaluated in the center of a cell is larger then the actual cell 
-   diameter. Make sure you stop refining locally if the number of local
-   refinement cycles you did is equal to the parameter 
-   `Number of global refinements`. Setting the function above to `0` should produce the same results as before, i.e., a fixed number of global refinements up to `Number of global refinements`.
+8. Taking the exact solution computed on the L-shaped domain, compute the rate
+at which the adaptive finite element method converges in terms of the number of
+degrees of freedom using the three estimators above
 
-8. Make sure you compute correctly the hanging node constraints, and that your
-solver works also with hanging nodes
+9. Set zero boundary conditions, forcing term equal to four, exact solution
+equal to `-x^2-y^2+1` and solve the problem on a circle with center in the
+origin and radius one, for various finite element and mapping degrees. What do
+you observe when the mapping degree does not match the finite element degree?
+How do you explain this?
 
-9. Add a preconditioner to your solver. If you have trilinos installed and it
-is configured inside `deal.II`, use its algebraic multigrid preconditioner (it
-works also with `deal.II` matrices). Otherwise use one of the other available
-preconditioners in the library. Verify that your solver is now faster.
+10. Create a test that reproduces exactly the behaviour of `step-6`, using only
+your parameter file
